@@ -19,3 +19,8 @@ Package.resolved
 *.swp
 *~
 .DS_Store
+
+# Release and Generated Assets
+*.dmg
+*.zip
+AppIcon.icns
