@@ -1,98 +1,155 @@
-# QuickMute
+# 🎙️ QuickMute
 
-**QuickMute** is a lightweight, high-performance macOS menu bar application that intercepts the **F5** key globally to mute and unmute your default microphone system-wide. 
+<p align="center">
+  <strong>A lightweight, zero-permission global F5 microphone mute utility for macOS.</strong>
+</p>
 
-Because it operates directly at the macOS CoreAudio level, muting is reflected globally across all communication platforms—guaranteeing compatibility with **WhatsApp, FaceTime, Zoom, Microsoft Teams, Slack, Webex, Discord, Chrome, Safari**, and any other audio-recording software.
-
----
-
-## Key Features
-
-*   **Universal Compatibility**: Silences the microphone at the hardware abstraction layer (CoreAudio). Apps receive absolute silence.
-*   **Zero-Permission Hotkey**: Uses Carbon Event Manager to intercept global keystrokes. Unlike keyboard sniffers or standard event monitors, **QuickMute does not require intrusive Accessibility (Assistive Device) permissions**.
-*   **Dynamic Device Synchronization**: Automatically detects changes to your system's default input source (e.g., unplugging a USB mic, wearing AirPods, or connecting a headset) and binds its listeners and mute states to the new device in real-time.
-*   **Native Bezel HUD**: Displays a glassmorphic overlay panel centered on screen when the status changes. Built using `NSVisualEffectView` with `.hudWindow` material to match the macOS native volume HUD.
-*   **Acoustic Indicators**: Plays a system `Pop` sound when muting and a high-pitched `Tink` sound when unmuting.
-*   **Launch at Login**: Integrates with modern macOS `SMAppService` APIs to register as a boot agent.
-*   **Customization Menu**: Left/Right-click the menu bar microphone icon to toggle the HUD, sound indicators, launch-at-login settings, or quit the application.
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-macOS%2011.0%2B-blue.svg" alt="Platform: macOS 11.0+" />
+  <img src="https://img.shields.io/badge/swift-6.0%2B-orange.svg" alt="Swift: 6.0+" />
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License: MIT" />
+  <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Build Status" />
+  <img src="https://img.shields.io/badge/release-v1.0.0-blue.svg" alt="Release: v1.0.0" />
+</p>
 
 ---
 
-## Production-Level Versioning
+## 📖 Table of Contents
+- [About the Project](#-about-the-project)
+- [Key Features](#-key-features)
+- [Architecture & Flow](#-architecture--flow)
+- [Installation](#-installation)
+  - [Pre-compiled DMG](#1-pre-compiled-dmg)
+  - [Building from Source](#2-building-from-source)
+- [Usage & Keyboard Mappings](#-usage--keyboard-mappings)
+- [Troubleshooting](#-troubleshooting)
+- [Production Versioning](#-production-versioning)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-QuickMute conforms to standard macOS production-level versioning guidelines, utilizing two keys within `Info.plist`:
+---
 
-1.  **Marketing Version (`CFBundleShortVersionString`)**:
-    *   The user-visible version string (e.g., `1.0.0`, `2.1.3`).
-    *   Follows [Semantic Versioning (SemVer)](https://semver.org/).
-2.  **Build Version (`CFBundleVersion`)**:
-    *   The internal revision/compilation number (e.g., `1`, `48`, `204`).
-    *   An integer that monotonically increases with every compilation/release pipeline step.
+## 🎙️ About the Project
 
-### Automated Injection
-To prevent version fragmentation, version variables are injected dynamically during the distribution build pipeline. The `release.sh` script leverages the native macOS `plutil` utility to inject custom marketing and build versions directly into the packaged app bundle:
+**QuickMute** is a high-performance utility designed to toggle your macOS system microphone with a single press of the **F5** key. 
 
+Unlike other software that attempts to mute individual video-conferencing apps (which is prone to failure and breaking updates), QuickMute operates at the **macOS CoreAudio Hardware Abstraction Layer (HAL)**. Toggling mute in QuickMute instantly silences the system's default input microphone, guaranteeing 100% silent audio across **all applications**—including **FaceTime, WhatsApp, Zoom, Slack, Microsoft Teams, Discord, Google Meet, Webex**, and browser-based recording sessions.
+
+---
+
+## ✨ Key Features
+
+*   **🔒 Zero-Permission Interception**: Leverages the macOS Carbon Event Manager to capture the F5 key globally. It works when the app is in the background **without requiring intrusive Accessibility (Assistive Device) permissions**.
+*   **🛠️ CoreAudio Integration**: Operates directly on the default audio input device. Fallback mechanics automatically adjust the volume scalar to `0.0` for devices that do not support standard hardware mute properties.
+*   **🔄 Dynamic Device Sync**: Listens to system audio hardware events. If you plug in a USB microphone, switch to AirPods, or unplug a headset, QuickMute immediately redirects its observers and syncs the mute state.
+*   **✨ Premium Glassmorphic HUD**: Displays a translucent status overlay centered on the primary display (matching native macOS volume HUD aesthetics). Built using `NSVisualEffectView` with `.hudWindow` material.
+*   **🔊 Audio Feedback**: Plays a subtle system `Pop` sound on mute and a `Tink` sound on unmute.
+*   **🚀 Modern Boot Agent**: Uses modern `ServiceManagement` APIs (`SMAppService`) to configure auto-start on login.
+
+---
+
+## 📐 Architecture & Flow
+
+The interaction logic and coordination among the Swift modules:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant HKM as HotKeyManager (Carbon)
+    participant Delegate as AppDelegate (App Controller)
+    participant MicM as MicrophoneManager (CoreAudio)
+    participant HUD as HUDWindow (UI Overlay)
+    participant CoreAudio as macOS CoreAudio HAL
+
+    User->>HKM: Press F5 (Global Hotkey)
+    HKM->>Delegate: Trigger onKeyPressed Callback
+    Delegate->>MicM: Call toggleMute()
+    MicM->>CoreAudio: Set Mute/Volume (Property Set)
+    CoreAudio-->>MicM: Trigger Property Listener callback
+    MicM->>Delegate: Trigger onMuteStatusChanged Callback
+    Delegate->>HUD: Call show(isMuted:)
+    Delegate->>Delegate: Play sound pop/tink
+    HUD->>User: Display translucent glassmorphic HUD
+```
+
+---
+
+## 📦 Installation
+
+### 1. Pre-compiled DMG
+To install the packaged build:
+1. Double-click the generated `QuickMute.dmg`.
+2. Drag **QuickMute.app** into your `/Applications` directory.
+3. Open it from your Applications folder (approve microphone permissions if prompted).
+
+### 2. Building from Source
+Ensure you have Xcode Command Line Tools installed (`xcode-select --install`).
 ```bash
-# Example syntax
-./release.sh <marketing_version> <build_number>
-```
+# Clone the repository
+git clone https://github.com/yourusername/QuickMute.git
+cd QuickMute
 
----
-
-## Project Structure
-
-```
-QuickMute/
-├── main.swift             # Application entry point, disables stdout buffering.
-├── AppDelegate.swift      # Orchestrates settings, sound play, login service, and menus.
-├── MicrophoneManager.swift# Interfaces with CoreAudio (HAL) to toggle and monitor mute state.
-├── HotKeyManager.swift    # Registers the global F5 hotkey hook using Carbon APIs.
-├── HUDWindow.swift        # Renders the native glassmorphic HUD status display panel.
-├── Info.plist             # Background agent properties and microphone descriptions.
-├── build.sh               # Compilation script assembling QuickMute.app.
-├── release.sh             # Production packaging script producing .dmg and .zip bundles.
-└── .gitignore             # Standard macOS/Swift Git rules.
-```
-
----
-
-## How to Build & Run
-
-### 1. Compile locally
-Run the compilation script to compile the Swift source files:
-```bash
+# Compile and package the app bundle
 ./build.sh
-```
-This compiles the executable and organizes it into a sandboxed app bundle: `QuickMute.app`.
 
-### 2. Run the App
-To start the app in the background:
-```bash
+# Run the compiled app bundle in the background
 open QuickMute.app
 ```
-You will see the microphone icon in your status bar menu.
-
-### 3. Generate Production Releases (with Versioning)
-To package the app for distribution, run the release script, optionally passing a marketing version and build number:
-```bash
-# Packages default version 1.0.0 (Build 1)
-./release.sh
-
-# Packages custom version 1.1.2 (Build 45)
-./release.sh 1.1.2 45
-```
-This script updates the `Info.plist` inside the bundle and outputs:
-- **`QuickMute.dmg`**: A compressed Disk Image containing a shortcut link to `/Applications` for easy drag-and-drop user installation.
-- **`QuickMute.zip`**: A standard compressed archive containing the app bundle.
 
 ---
 
-## Interacting with the Application
+## ⌨️ Usage & Keyboard Mappings
 
-*   **Triggering the Mute State**:
-    *   By default on macOS, function keys behave as media keys (brightness, keyboard backlight, dictation).
-    *   To trigger the mute toggle, press **`Fn + F5`** (or Globe + F5).
-    *   Alternatively, go to **System Settings > Keyboard > Keyboard Shortcuts > Function Keys** and enable **"Use F1, F2, etc. keys as standard function keys"** to trigger the mute toggle by pressing **F5** directly.
-*   **Status Indicators**:
-    *   *Menu Bar Icon*: Displays an active mic glyph or a slashed mic glyph. The icon turns **red** when muted.
-    *   *HUD overlay*: Renders a transient overlay stating "Microphone Muted" or "Microphone Active".
+By default, macOS configures the top row of keyboard keys (F1–F12) to control hardware media functions (such as display brightness, keyboard backlighting, or dictation).
+
+Because **F5** is mapped by macOS to **Dictation** or **Keyboard Backlight Down**:
+1.  **Default Option**: You must press **`Fn + F5`** (hold down the `fn` / Globe key and press F5) to toggle your microphone.
+2.  **F5 Direct Press Option**: If you want to mute by pressing **F5** directly (without the `fn` key):
+    *   Navigate to **System Settings** > **Keyboard** > **Keyboard Shortcuts** > **Function Keys**.
+    *   Turn on **"Use F1, F2, etc. keys as standard function keys"**.
+
+---
+
+## 🔍 Troubleshooting
+
+#### 1. Pressing F5 does not mute the mic
+*   *Cause*: Your keyboard is emitting a media key event instead of standard F5.
+*   *Solution*: Press **`Fn + F5`**, or enable "Use F1, F2, etc. keys as standard function keys" in your macOS Keyboard Settings.
+
+#### 2. The menu bar icon displays status, but other apps still capture audio
+*   *Cause*: The application might be using a non-default audio input device that was bypassed, or microphone permission was denied.
+*   *Solution*: Ensure the communication app's input settings are configured to use the **"System Default"** input device, and verify that QuickMute is authorized under **System Settings > Privacy & Security > Microphone**.
+
+---
+
+## 🏷️ Production Versioning
+
+QuickMute handles versioning inside `Info.plist` dynamically using the native macOS `plutil` utility:
+
+*   **Marketing Version (`CFBundleShortVersionString`)**: e.g., `1.0.0` (Semantic Version).
+*   **Build Version (`CFBundleVersion`)**: e.g., `42` (Auto-incrementing compilation index).
+
+To inject production-ready version markers during packaging:
+```bash
+# Syntax: ./release.sh <marketing_version> <build_number>
+./release.sh 1.1.0 42
+```
+This updates the build headers and bundles the build into `QuickMute.dmg` and `QuickMute.zip`.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these guidelines:
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
