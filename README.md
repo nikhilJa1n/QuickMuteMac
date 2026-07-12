@@ -18,6 +18,7 @@
 - [About the Project](#-about-the-project)
 - [Key Features](#-key-features)
 - [Architecture & Flow](#-architecture--flow)
+- [Project Structure](#-project-structure)
 - [Installation](#-installation)
   - [Pre-compiled DMG](#1-pre-compiled-dmg)
   - [Building from Source](#2-building-from-source)
@@ -71,6 +72,26 @@ sequenceDiagram
     Delegate->>HUD: Call show(isMuted:)
     Delegate->>Delegate: Play sound pop/tink
     HUD->>User: Display translucent glassmorphic HUD
+```
+
+---
+
+## 📂 Project Structure
+
+```
+QuickMute/
+├── main.swift              # Application entry point, disables stdout buffering.
+├── AppDelegate.swift       # Orchestrates settings, sound play, login service, and menus.
+├── MicrophoneManager.swift # Interfaces with CoreAudio (HAL) to toggle/monitor mute state.
+├── HotKeyManager.swift     # Registers the global F5 hotkey hook using Carbon APIs.
+├── HUDWindow.swift         # Renders the native glassmorphic HUD status display panel.
+├── Info.plist              # Background agent properties and microphone descriptions.
+├── AppIcon.icns            # Compiled macOS multi-resolution App Icon asset.
+├── quickmute_logo.jpg      # Source high-resolution app logo image.
+├── build.sh                # Compilation script assembling QuickMute.app.
+├── release.sh              # Production packaging script producing .dmg and .zip bundles.
+├── generate_icns.sh        # Utility script generating AppIcon.icns from logo source.
+└── README.md               # Repository documentation.
 ```
 
 ---

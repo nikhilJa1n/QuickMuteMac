@@ -11,5 +11,8 @@ mkdir -p QuickMute.app/Contents/Resources
 
 mv QuickMute QuickMute.app/Contents/MacOS/
 cp Info.plist QuickMute.app/Contents/Info.plist
+if [ -f AppIcon.icns ]; then
+    cp AppIcon.icns QuickMute.app/Contents/Resources/
+fi
 
 echo "=== Build Complete: QuickMute.app created successfully! ==="
