@@ -14,7 +14,7 @@ if [ ! -z "$2" ]; then
 fi
 
 echo "=== Rebuilding QuickMute for Release (Version: $VERSION, Build: $BUILD_NUMBER) ==="
-./build.sh
+bash build.sh
 
 # Setup temporary packaging directory
 echo "=== Preparing Release Packages ==="

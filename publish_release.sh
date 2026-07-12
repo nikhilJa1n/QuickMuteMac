@@ -22,7 +22,7 @@ fi
 
 # 2. Re-build and package the release assets locally
 echo "=== Packaging assets locally for $VERSION (Build: $BUILD_NUMBER) ==="
-./release.sh "$VERSION" "$BUILD_NUMBER"
+bash release.sh "$VERSION" "$BUILD_NUMBER"
 
 # 3. Tag and push changes
 echo "=== Tagging commit as $TAG and pushing to remote ==="
