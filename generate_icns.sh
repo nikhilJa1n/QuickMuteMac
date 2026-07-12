@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-INPUT_IMAGE="quickmute_logo.jpg"
+INPUT_IMAGE="quickmute_logo_transparent.png"
 ICONSET_DIR="QuickMute.iconset"
 
 if [ ! -f "$INPUT_IMAGE" ]; then

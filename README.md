@@ -88,9 +88,11 @@ QuickMute/
 ├── Info.plist              # Background agent properties and microphone descriptions.
 ├── AppIcon.icns            # Compiled macOS multi-resolution App Icon asset.
 ├── quickmute_logo.jpg      # Source high-resolution app logo image.
+├── quickmute_logo_transparent.png # Processed transparent app logo.
 ├── build.sh                # Compilation script assembling QuickMute.app.
 ├── release.sh              # Production packaging script producing .dmg and .zip bundles.
 ├── generate_icns.sh        # Utility script generating AppIcon.icns from logo source.
+├── crop_icon.swift         # Swift script to crop and add transparency to the logo.
 └── README.md               # Repository documentation.
 ```
 
