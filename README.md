@@ -25,6 +25,7 @@
 - [Usage & Keyboard Mappings](#-usage--keyboard-mappings)
 - [Troubleshooting](#-troubleshooting)
 - [Production Versioning](#-production-versioning)
+- [GitHub Releases](#-github-release-pipeline)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -80,6 +81,8 @@ sequenceDiagram
 
 ```
 QuickMute/
+├── .github/workflows/
+│   └── release.yml         # GitHub Actions CI/CD release pipeline.
 ├── main.swift              # Application entry point, disables stdout buffering.
 ├── AppDelegate.swift       # Orchestrates settings, sound play, login service, and menus.
 ├── MicrophoneManager.swift # Interfaces with CoreAudio (HAL) to toggle/monitor mute state.
@@ -91,6 +94,7 @@ QuickMute/
 ├── quickmute_logo_transparent.png # Processed transparent app logo.
 ├── build.sh                # Compilation script assembling QuickMute.app.
 ├── release.sh              # Production packaging script producing .dmg and .zip bundles.
+├── publish_release.sh      # Automation script for Git tagging, pushing, and GitHub CLI release publishing.
 ├── generate_icns.sh        # Utility script generating AppIcon.icns from logo source.
 ├── crop_icon.swift         # Swift script to crop and add transparency to the logo.
 └── README.md               # Repository documentation.
@@ -159,6 +163,41 @@ To inject production-ready version markers during packaging:
 ./release.sh 1.1.0 42
 ```
 This updates the build headers and bundles the build into `QuickMute.dmg` and `QuickMute.zip`.
+
+---
+
+## 🚀 GitHub Release Pipeline (Automated)
+
+You can publish and distribute new versions of QuickMute automatically in the cloud or via a single command locally.
+
+### Method 1: Cloud Automation (Recommended)
+This repository includes a **GitHub Actions CI/CD Workflow** ([release.yml](file:///Users/nikhiljain/Documents/MyProjects/QuickMute/.github/workflows/release.yml)). Every time you push a release tag, GitHub builds and publishes the assets automatically:
+
+1. Commit and push your code to the remote `main` branch.
+2. Push a release tag starting with `v` (e.g., `v1.0.3`):
+   ```bash
+   git tag -a v1.0.3 -m "Release version 1.0.3"
+   git push origin v1.0.3
+   ```
+3. GitHub Actions will spin up a macOS runner, compile QuickMute, wrap it in a `.dmg` and `.zip` with the correct version, and publish a new GitHub release automatically!
+
+### Method 2: Local CLI Automation
+If you have the [GitHub CLI (`gh`)](https://cli.github.com/) installed and authenticated locally, you can compile, package, tag, push, and publish the release in a single step using our helper script:
+
+```bash
+chmod +x publish_release.sh
+./publish_release.sh <marketing_version> <build_number>
+
+# Example:
+./publish_release.sh 1.0.3 5
+```
+
+### Method 3: Manual Web Interface
+If you prefer not to use CLI/Actions, you can package the assets locally:
+```bash
+./release.sh 1.0.3 5
+```
+Then, draft a release on the GitHub Web UI under **Releases > Draft a new release**, specify tag `v1.0.3`, and drag-and-drop the generated `QuickMute.dmg` and `QuickMute.zip` files from your project root.
 
 ---
 

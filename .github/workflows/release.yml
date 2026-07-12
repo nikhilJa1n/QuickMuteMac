@@ -1,0 +1,58 @@
+name: Release QuickMute
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Extract Version from Tag
+        id: get_version
+        run: |
+          # Strip the 'v' prefix from the tag name (e.g. v1.0.0 -> 1.0.0)
+          TAG_NAME="${GITHUB_REF#refs/tags/v}"
+          echo "VERSION=${TAG_NAME}" >> $GITHUB_ENV
+          # Use GitHub run number as the build version
+          echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+
+      - name: Make Scripts Executable
+        run: |
+          chmod +x build.sh
+          chmod +x release.sh
+
+      - name: Compile and Package Application
+        run: |
+          ./release.sh "${{ env.VERSION }}" "${{ env.BUILD_NUMBER }}"
+
+      - name: Create GitHub Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            QuickMute.dmg
+            QuickMute.zip
+          name: QuickMute v${{ env.VERSION }}
+          body: |
+            ## QuickMute Release v${{ env.VERSION }} (Build ${{ env.BUILD_NUMBER }})
+            
+            This is an automated release of QuickMute.
+            
+            ### Installation Instructions
+            1. Download the **`QuickMute.dmg`** asset below.
+            2. Double-click to mount the disk image.
+            3. Drag and drop the **`QuickMute.app`** into your `/Applications` directory.
+            
+            ---
+            *Released automatically by GitHub Actions CI/CD pipeline.*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
