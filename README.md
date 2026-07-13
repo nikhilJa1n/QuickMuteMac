@@ -119,11 +119,8 @@ Ensure you have Xcode Command Line Tools installed (`xcode-select --install`).
 git clone https://github.com/yourusername/QuickMute.git
 cd QuickMute
 
-# Compile and package the app bundle
-./build.sh
-
-# Run the compiled app bundle in the background
-open QuickMute.app
+# Compile, sign, deploy to /Applications, and launch the app automatically
+bash build.sh
 ```
 
 ---

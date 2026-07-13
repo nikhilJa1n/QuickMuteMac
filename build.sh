@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Kill any currently running instance of the app before rebuilding
+echo "=== Stopping running QuickMute instance ==="
+pkill -x QuickMute || true
+
 echo "=== Compiling QuickMute Swift Source ==="
 swiftc -O main.swift AppDelegate.swift HotKeyManager.swift MicrophoneManager.swift HUDWindow.swift -o QuickMute
 
@@ -28,4 +32,11 @@ echo "=== Code Signing QuickMute.app (Identity: $IDENTITY) ==="
 codesign --force --options runtime --sign "$IDENTITY" --entitlements Entitlements.plist QuickMute.app/Contents/MacOS/QuickMute
 codesign --force --options runtime --sign "$IDENTITY" QuickMute.app
 
-echo "=== Build Complete: QuickMute.app created successfully! ==="
+echo "=== Deploying to /Applications ==="
+rm -rf /Applications/QuickMute.app
+cp -R QuickMute.app /Applications/
+
+echo "=== Launching QuickMute.app ==="
+open /Applications/QuickMute.app
+
+echo "=== Build & Deploy Complete: QuickMute.app is running from /Applications! ==="
