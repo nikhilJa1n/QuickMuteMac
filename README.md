@@ -25,6 +25,7 @@
 - [Usage & Keyboard Mappings](#-usage--keyboard-mappings)
 - [Troubleshooting](#-troubleshooting)
 - [Production Versioning](#-production-versioning)
+- [Code Signing & Hardened Runtime](#-code-signing--hardened-runtime)
 - [GitHub Releases](#-github-release-pipeline)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -95,6 +96,7 @@ QuickMute/
 ├── build.sh                # Compilation script assembling QuickMute.app.
 ├── release.sh              # Production packaging script producing .dmg and .zip bundles.
 ├── publish_release.sh      # Automation script for Git tagging, pushing, and GitHub CLI release publishing.
+├── setup_cert.sh           # Script to generate/import local self-signed codesign certificate.
 ├── generate_icns.sh        # Utility script generating AppIcon.icns from logo source.
 ├── crop_icon.swift         # Swift script to crop and add transparency to the logo.
 └── README.md               # Repository documentation.
@@ -163,6 +165,43 @@ To inject production-ready version markers during packaging:
 ./release.sh 1.1.0 42
 ```
 This updates the build headers and bundles the build into `QuickMute.dmg` and `QuickMute.zip`.
+
+---
+
+## 🔏 Code Signing & Hardened Runtime
+
+To comply with macOS Gatekeeper security models, QuickMute is built with **Hardened Runtime** enabled and signed recursively using an `Entitlements.plist`. The build and release scripts will automatically detect your code signing configuration in the following order:
+1. An explicitly defined `CODESIGN_IDENTITY` environment variable.
+2. A local self-signed `"QuickMuteDeveloper"` certificate (if present in your keychain).
+3. Fallback to ad-hoc code signing (`-`) if no certificate is found.
+
+### 1. Persistent Local Signing (Recommended for Development)
+To avoid macOS asking you for microphone permissions repeatedly every time you rebuild the app during development, you can generate a persistent local self-signed certificate:
+
+```bash
+# Make the certificate generator executable and run it
+chmod +x setup_cert.sh
+./setup_cert.sh
+```
+
+This script generates a private key and a self-signed code signing identity named `"QuickMuteDeveloper"` valid for 10 years, and imports it into your login keychain. Once run, the build scripts will automatically pick it up and use it to sign your app.
+
+### 2. Apple Developer Signing (For Public Distribution)
+If you have an Apple Developer Account and want to distribute the app publicly:
+1. Locate your **Developer ID Application** certificate name in Keychain Access (e.g., `"Developer ID Application: Your Name (TEAMID)"`).
+2. Export the environment variable:
+   ```bash
+   export CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)"
+   ```
+3. Run the scripts normally:
+   ```bash
+   # Compiles and signs the bundle recursively
+   bash build.sh
+
+   # Packages, version-injects, and signs both the app and the DMG
+   bash release.sh 1.0.0 1
+   ```
+   *(Note: The release script automatically re-signs the app bundle after Info.plist is updated to ensure the final signature seal remains valid).*
 
 ---
 

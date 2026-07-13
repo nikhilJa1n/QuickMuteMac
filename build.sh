@@ -15,4 +15,17 @@ if [ -f AppIcon.icns ]; then
     cp AppIcon.icns QuickMute.app/Contents/Resources/
 fi
 
+# Detect Code Signing Identity (1. Explicit env variable, 2. Local self-signed certificate, 3. Ad-hoc fallback)
+if [ ! -z "$CODESIGN_IDENTITY" ]; then
+    IDENTITY="$CODESIGN_IDENTITY"
+elif security find-certificate -c "QuickMuteDeveloper" > /dev/null 2>&1; then
+    IDENTITY="QuickMuteDeveloper"
+else
+    IDENTITY="-"
+fi
+
+echo "=== Code Signing QuickMute.app (Identity: $IDENTITY) ==="
+codesign --force --options runtime --sign "$IDENTITY" --entitlements Entitlements.plist QuickMute.app/Contents/MacOS/QuickMute
+codesign --force --options runtime --sign "$IDENTITY" QuickMute.app
+
 echo "=== Build Complete: QuickMute.app created successfully! ==="
